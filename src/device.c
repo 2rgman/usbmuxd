@@ -222,7 +222,7 @@ static int send_packet(struct mux_device *dev, enum mux_protocol proto, void *he
 		mhdr->magic = htonl(0xfeedface);
 		if (proto == MUX_PROTO_SETUP) {
 			dev->tx_seq = 0;
-			dev->rx_seq = 0xFFFFF;
+			dev->rx_seq = 0xFFFF;
 		}
 		mhdr->tx_seq = htons(dev->tx_seq);
 		mhdr->rx_seq = htons(dev->rx_seq);
