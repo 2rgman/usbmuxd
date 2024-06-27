@@ -48,7 +48,7 @@ int next_device_id;
 #define DEV_MRU 65536
 
 #define CONN_INBUF_SIZE		262144
-#define CONN_OUTBUF_SIZE	65536
+#define CONN_OUTBUF_SIZE	262144
 
 #define ACK_TIMEOUT 30
 
