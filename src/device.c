@@ -78,8 +78,8 @@ struct mux_header
 	uint32_t protocol;
 	uint32_t length;
 	uint32_t magic;
-	uint32_t tx_seq;
-	uint32_t rx_seq;
+	uint16_t tx_seq;
+	uint16_t rx_seq;
 };
 
 struct version_header
@@ -125,8 +125,8 @@ struct mux_device
 	uint32_t pktlen;
 	void *preflight_cb_data;
 	int version;
-	uint32_t rx_seq;
-	uint32_t tx_seq;
+	uint16_t rx_seq;
+	uint16_t tx_seq;
 };
 
 static struct collection device_list;
