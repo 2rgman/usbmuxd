@@ -394,7 +394,7 @@ static struct usb_device* find_device(int bus, int address)
 /// @param dev 
 /// @param usbdev 
 /// @param handle 
-/// @return 0 - undetermined, 1 - initial, 2 - valeria, 3 - cdc_ncm
+/// @return 0 - undetermined, 1 - initial, 2 - valeria, 3 - cdc_ncm, 4 - usbeth+cdc_ncm, 5 - cdc_ncm direct
 static int guess_mode(struct libusb_device* dev, struct usb_device *usbdev)
 {
 	int res, j;
@@ -404,9 +404,19 @@ static int guess_mode(struct libusb_device* dev, struct usb_device *usbdev)
 	int bus = usbdev->bus;
 	int address = usbdev->address;
 
+	if(devdesc.bNumConfigurations == 1) {
+		// CDC-NCM Direct
+		return 5;
+	}
+
 	if(devdesc.bNumConfigurations <= 4) {
 		// Assume this is initial mode
 		return 1;
+	}
+
+	if(devdesc.bNumConfigurations == 6) {
+		// USB Ethernet + CDC-NCM
+		return 4;
 	}
 
 	if(devdesc.bNumConfigurations != 5) {
@@ -615,6 +625,9 @@ static void device_complete_initialization(struct mode_context *context, struct 
 		case LIBUSB_SPEED_SUPER:
 			usbdev->speed = 5000000000;
 			break;
+		case LIBUSB_SPEED_SUPER_PLUS:
+			usbdev->speed = 10000000000;
+			break;
 		case LIBUSB_SPEED_HIGH:
 		case LIBUSB_SPEED_UNKNOWN:
 		default:
@@ -691,12 +704,12 @@ static void get_mode_cb(struct libusb_transfer* transfer)
 	unsigned char *data = libusb_control_transfer_get_data(transfer);
 
 	char* desired_mode_char = getenv(ENV_DEVICE_MODE);
-	int desired_mode = desired_mode_char ? atoi(desired_mode_char) : 3;
+	int desired_mode = desired_mode_char ? atoi(desired_mode_char) : 1;
 	int guessed_mode = guess_mode(context->dev, dev);
 
 	// Response is 3:3:3:0 for initial mode, 5:3:3:0 otherwise.
 	usbmuxd_log(LL_INFO, "Received response %i:%i:%i:%i for get_mode request for device %i-%i", data[0], data[1], data[2], data[3], context->bus, context->address);
-	if(desired_mode >= 1 && desired_mode <= 3 && 
+	if(desired_mode >= 1 && desired_mode <= 5 &&
 	   guessed_mode > 0 && // do not switch mode if guess failed
 	   guessed_mode != desired_mode) {
 		usbmuxd_log(LL_WARNING, "Switching device %i-%i mode to %i", context->bus, context->address, desired_mode);
